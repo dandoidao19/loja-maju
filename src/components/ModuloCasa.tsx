@@ -2,7 +2,8 @@
 
 import { supabase } from '@/lib/supabase'
 import ModalPagarAvancado from './ModalPagarAvancado' // Importação do componente corrigido
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useDadosFinanceiros } from '@/context/DadosFinanceirosContext'
 // import ImportacaoExcel from './ImportacaoExcel' // Movido para ModuloConfiguracoes
 import { getDataAtualBrasil, formatarDataParaExibicao } from '@/lib/dateUtils'
 
@@ -106,6 +107,7 @@ const calcularDataPorPrazo = (dataBase: string, prazo: string): string => {
 }
 
 export default function ModuloCasa() {
+  const { dados, recarregarLancamentos, atualizarCaixaReal } = useDadosFinanceiros()
   const [centrosCusto, setCentrosCusto] = useState<CentroCusto[]>([])
   const [lancamentos, setLancamentos] = useState<Lancamento[]>([])
   const [todosLancamentos, setTodosLancamentos] = useState<Lancamento[]>([])
@@ -304,10 +306,17 @@ export default function ModuloCasa() {
     }
   }, [mesFiltro, modoVisualizacao])
 
-  useEffect(() => {
-    carregarDados()
-    calcularCaixaReal()
-  }, [carregarDados, calcularCaixaReal])
+useEffect(() => {
+  carregarDados()
+}, [carregarDados])
+
+// Sincronizar com cache global
+useEffect(() => {
+  setCentrosCusto(dados.centrosCustoCasa)
+  setLancamentos(dados.lancamentosCasa)
+  setTodosLancamentos(dados.todosLancamentosCasa)
+  setCaixaRealCasa(dados.caixaRealCasa)
+}, [dados.centrosCustoCasa, dados.lancamentosCasa, dados.todosLancamentosCasa, dados.caixaRealCasa])
 
   const adicionarLancamento = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -455,10 +464,13 @@ export default function ModuloCasa() {
         recorrenciaDia: ''
       })
       
-      await carregarDados()
-      alert(`✅ ${lancamentosParaInserir.length} Lançamento(s) adicionado(s) com sucesso!`)
-      
-    } catch (error: any) {
+     // Recarregar dados do cache
+await recarregarLancamentos('casa')
+await atualizarCaixaReal('casa')
+
+alert(`✅ ${lancamentosParaInserir.length} Lançamento(s) adicionado(s) com sucesso!`)
+
+} catch (error: any) {
       console.error('❌ Erro ao adicionar lançamento:', error)
       alert('❌ Erro ao adicionar lançamento: ' + error.message)
     } finally {
@@ -532,17 +544,21 @@ export default function ModuloCasa() {
       }
 
       // 3. Resetar modal e recarregar dados
-      setModalPagar({ 
-        aberto: false, 
-        lancamento: null, 
-        passo: 'confirmar_total', 
-        valorPago: null, 
-        novaDataVencimento: getDataAtualBrasil() 
-      })
-      await carregarDados()
-      alert('✅ Pagamento processado com sucesso!')
+     setModalPagar({ 
+  aberto: false, 
+  lancamento: null, 
+  passo: 'confirmar_total', 
+  valorPago: null, 
+  novaDataVencimento: getDataAtualBrasil() 
+})
 
-    } catch (error: any) {
+// Recarregar dados do cache
+await recarregarLancamentos('casa')
+await atualizarCaixaReal('casa')
+
+alert('✅ Pagamento processado com sucesso!')
+
+} catch (error: any) {
       console.error('❌ Erro ao processar pagamento:', error)
       alert('❌ Erro ao processar pagamento: ' + error.message)
     } finally {
@@ -559,11 +575,15 @@ export default function ModuloCasa() {
 
       if (error) throw error
 
-      setModalExcluir({ aberto: false, lancamento: null })
-      await carregarDados()
-      alert('✅ Lançamento excluído com sucesso!')
-      
-    } catch (error: any) {
+    setModalExcluir({ aberto: false, lancamento: null })
+
+// Recarregar dados do cache
+await recarregarLancamentos('casa')
+await atualizarCaixaReal('casa')
+
+alert('✅ Lançamento excluído com sucesso!')
+
+} catch (error: any) {
       console.error('❌ Erro ao excluir lançamento:', error)
       alert('❌ Erro ao excluir lançamento: ' + error.message)
     }
@@ -647,10 +667,13 @@ export default function ModuloCasa() {
         recorrenciaDia: ''
       })
       
-      await carregarDados()
-      alert('✅ Lançamento editado com sucesso!')
-      
-    } catch (error: any) {
+    // Recarregar dados do cache
+await recarregarLancamentos('casa')
+await atualizarCaixaReal('casa')
+
+alert('✅ Lançamento editado com sucesso!')
+
+} catch (error: any) {
       console.error('❌ Erro ao salvar edição:', error)
       alert('❌ Erro ao salvar edição: ' + error.message)
     } finally {

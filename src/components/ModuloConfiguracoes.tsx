@@ -4,10 +4,12 @@ import { useState } from 'react'
 import ControleCDC from './ControleCDC' // Importa o novo componente
 import LimparTransacoes from './LimparTransacoes' // Componente de limpeza
 import ImportacaoExcel from './ImportacaoExcel' // Componente de importação
+import MenuCategorias from './MenuCategorias' // Importa o novo menu de categorias
 
 // Define os submenus
 const submenus = [
   { id: 'cdc', title: 'Centros de Custo', component: ControleCDC },
+  { id: 'loja', title: 'Loja', component: MenuCategorias }, // Novo menu de categorias
   { id: 'limpeza', title: 'Limpar Transações', component: LimparTransacoes },
   { id: 'importacao', title: 'Importação Excel', component: ImportacaoExcel },
 ]
@@ -22,9 +24,7 @@ export default function ModuloConfiguracoes() {
 
     const ComponenteAtivo = menu.component
 
-    // O componente ControleCDC precisa de uma função onDataChange, mas por enquanto
-    // não precisamos que ele faça nada no pai, apenas para satisfazer a interface.
-    // Em um cenário real, essa função recarregaria dados no ModuloCasa.
+    // Função para lidar com mudanças de dados
     const handleDataChange = () => {
       console.log('Dados de Centros de Custo alterados.')
     }
@@ -35,18 +35,12 @@ export default function ModuloConfiguracoes() {
       // Aqui você chamaria a função de recarregar dados do ModuloCasa, se estivesse aqui.
     }
 
-    if (!ComponenteAtivo) {
-      return (
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-3">{menu.title}</h2>
-          <p className="text-gray-600">Conteúdo do submenu {menu.title} será implementado na próxima fase.</p>
-        </div>
-      )
-    }
-
+    // Renderizar o componente baseado no menuAtivo
     switch (menuAtivo) {
       case 'cdc':
         return <ControleCDC onDataChange={handleDataChange} />
+      case 'loja':
+        return <MenuCategorias />
       case 'limpeza':
         return <LimparTransacoes onDataChange={handleDataChange} />
       case 'importacao':
@@ -54,13 +48,6 @@ export default function ModuloConfiguracoes() {
       default:
         return <div>Componente não encontrado.</div>
     }
-    
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold mb-4">{menu.title}</h2>
-        <p className="text-gray-600">Conteúdo do submenu {menu.title} será implementado na próxima fase.</p>
-      </div>
-    )
   }
 
   return (

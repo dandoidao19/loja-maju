@@ -3,7 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState, useCallback } from 'react'
 import { getDataAtualBrasil, getMesAtualParaInput, prepararDataParaInsert, formatarDataParaExibicao } from '@/lib/dateUtils'
-
+import { useDadosFinanceiros } from '@/context/DadosFinanceirosContext'
 interface LancamentoFinanceiro {
   id: string
   descricao: string
@@ -28,6 +28,7 @@ interface ResumoDia {
 }
 
 export default function ResumoCaixas() {
+  const { dados } = useDadosFinanceiros()
   const [caixaRealCasa, setCaixaRealCasa] = useState(0)
   const [caixaRealLoja, setCaixaRealLoja] = useState(0)
   const [resumoHojeCasa, setResumoHojeCasa] = useState<ResumoDia>({ entradas: 0, saidas: 0 })
@@ -235,7 +236,15 @@ export default function ResumoCaixas() {
   useEffect(() => {
     carregarDados()
   }, [mesFiltro, buscarDadosContexto])
+useEffect(() => {
+  carregarDados()
+}, [mesFiltro, buscarDadosContexto])
 
+// Sincronizar com cache global
+useEffect(() => {
+  setCaixaRealCasa(dados.caixaRealCasa)
+  setCaixaRealLoja(dados.caixaRealLoja)
+}, [dados.caixaRealCasa, dados.caixaRealLoja])
   const CaixaRealFormatado = ({ valor, tema }: { valor: number, tema: 'casa' | 'loja' }) => {
     const isNegativo = valor < 0
     
